@@ -1,5 +1,6 @@
 import path from "path";
 import { promises as fs } from "fs";
+import http from "http";
 
 // TODO: Make code complete parallel
 
@@ -45,3 +46,14 @@ const main = async () => {
 };
 
 main();
+
+const server = http.createServer(async (request, response) => {
+  response.statusCode = 200;
+  response.setHeader("Content-Type", "text/plain");
+  response.end("Server\n");
+});
+
+const PORT = 5123;
+server.listen(PORT, () => {
+  console.log(`Server started on  http://localhost:${PORT}`);
+});

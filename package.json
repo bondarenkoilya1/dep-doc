@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc && node dist/index.js"
+    "dev": "nodemon",
+    "start": "nodemon src/index.ts"
   },
   "keywords": [
     "offline",
@@ -18,7 +19,9 @@
   "description": "Tool to see documentation for all dependencies offline",
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }
 }
