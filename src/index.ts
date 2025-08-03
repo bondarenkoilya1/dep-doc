@@ -1,6 +1,8 @@
 import path from "path";
 import { promises as fs } from "fs";
 
+// TODO: Make code complete parallel
+
 const projectRoot = path.resolve(process.cwd());
 const packageJsonFilePath = path.join(projectRoot, "package.json");
 const nodeModulesDirectoryPath = path.join(projectRoot, "node_modules");
@@ -8,19 +10,16 @@ const nodeModulesDirectoryPath = path.join(projectRoot, "node_modules");
 const getDependencies = (data: string) => {
   const { dependencies = {}, devDependencies = {} } = JSON.parse(data);
 
-  const arrayOfDependencies = Object.keys(dependencies);
-  const arrayOfDevDependencies = Object.keys(devDependencies);
-
-  return { arrayOfDependencies, arrayOfDevDependencies };
+  return {
+    dependencies: Object.keys(dependencies),
+    devDependencies: Object.keys(devDependencies)
+  };
 };
 
-const getReadmes = async (arrayOfDependencies: string[], arrayOfDevDependencies: string[]) => {
+const getReadmes = async (dependencies: string[], devDependencies: string[]) => {
+  const allDependencies = new Set([...dependencies, ...devDependencies]);
   const directories = await fs.readdir(nodeModulesDirectoryPath, { encoding: "utf8" });
-  const matchedDirectories = directories.filter(
-    (directory) =>
-      arrayOfDependencies.includes(directory) || arrayOfDevDependencies.includes(directory)
-  );
-
+  const matchedDirectories = directories.filter((directory) => allDependencies.has(directory));
   const readmes = [];
 
   for (const directory of matchedDirectories) {
@@ -36,12 +35,12 @@ const getReadmes = async (arrayOfDependencies: string[], arrayOfDevDependencies:
 const main = async () => {
   try {
     const packageJsonData = await fs.readFile(packageJsonFilePath, { encoding: "utf8" });
-    const { arrayOfDependencies, arrayOfDevDependencies } = getDependencies(packageJsonData);
-    const readmes = await getReadmes(arrayOfDependencies, arrayOfDevDependencies);
+    const { dependencies, devDependencies } = getDependencies(packageJsonData);
+    const readmes = await getReadmes(dependencies, devDependencies);
 
     if (!readmes.length) console.log("There is no available documentation.");
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
