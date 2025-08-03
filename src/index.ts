@@ -1,18 +1,9 @@
 import path from "path";
-import fs from "fs";
+import { promises as fs } from "fs";
 
 const projectRoot = path.resolve(process.cwd());
 const packageJSONFilePath = path.join(projectRoot, "package.json");
 const nodeModulesDirectoryPath = path.join(projectRoot, "node_modules");
-
-const readFileAsync = async (path: string) => {
-  return new Promise((resolve, reject) =>
-    fs.readFile(path, { encoding: "utf8" }, (error, data) => {
-      if (error) return reject(error);
-      resolve(data);
-    })
-  );
-};
 
 const getDependencies = (data: string) => {
   const { dependencies = {}, devDependencies = {} } = JSON.parse(data);
@@ -23,27 +14,35 @@ const getDependencies = (data: string) => {
   return { arrayOfDependencies, arrayOfDevDependencies };
 };
 
-const matchNodeModulesDependencies = (
+const matchNodeModulesDependencies = async (
   arrayOfDependencies: string[],
   arrayOfDevDependencies: string[]
 ) => {
-  fs.readdir(nodeModulesDirectoryPath, (error, directories) => {
-    if (error) throw error;
+  const directories = await fs.readdir(nodeModulesDirectoryPath, { encoding: "utf8" });
+  const matchedDirectories = directories.filter(
+    (directory) =>
+      arrayOfDependencies.includes(directory) || arrayOfDevDependencies.includes(directory)
+  );
 
-    const matchedDirectories = directories.filter(
-      (directory) =>
-        arrayOfDevDependencies.includes(directory) || arrayOfDependencies.includes(directory)
-    );
-
-    // matchedDirectories.forEach((directory) => {
-    //   const currentDirectoryFilePath = path.join(projectRoot, "node_modules", directory);
-    // });
-  });
+  return matchedDirectories;
+  // matchedDirectories.forEach((directory) => {
+  //   const currentDirectoryFilePath = path.join(projectRoot, "node_modules", directory);
+  // });
 };
 
-readFileAsync(packageJSONFilePath)
-  .then(getDependencies)
-  .then(({ arrayOfDependencies, arrayOfDevDependencies }) =>
-    matchNodeModulesDependencies(arrayOfDependencies, arrayOfDevDependencies)
-  )
-  .catch((error) => console.log(error.message));
+const main = async () => {
+  try {
+    const packageJSONData = await fs.readFile(packageJSONFilePath, { encoding: "utf8" });
+    const { arrayOfDependencies, arrayOfDevDependencies } = getDependencies(packageJSONData);
+    const matchedDirectories = await matchNodeModulesDependencies(
+      arrayOfDependencies,
+      arrayOfDevDependencies
+    );
+
+    console.log(matchedDirectories);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+main();
