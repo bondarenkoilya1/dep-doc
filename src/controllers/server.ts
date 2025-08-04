@@ -1,10 +1,22 @@
 import http from "http";
-import { PORT } from "../constants/index.js";
+import { PORT, SRC_PATH } from "../constants/index.js";
+import path from "path";
+import { promises as fs } from "fs";
 
 const handleRequest = async (request: http.IncomingMessage, response: http.ServerResponse) => {
-  response.statusCode = 200;
-  response.setHeader("Content-Type", "text/plain");
-  response.end("Server\n");
+  try {
+    const htmlPath = path.join(SRC_PATH, "index.html");
+    const htmlFile = await fs.readFile(htmlPath, { encoding: "utf8" });
+
+    const data = { content: "HTML page for the server" };
+    const modifiedHtml = htmlFile.replace("{{content}}", data.content);
+
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(modifiedHtml);
+  } catch (error) {
+    response.writeHead(500);
+    response.end("Internal Server Error");
+  }
 };
 
 export const createServer = (): http.Server => http.createServer(handleRequest);
