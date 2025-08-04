@@ -1,11 +1,12 @@
 import path from "path";
 import { promises as fs } from "fs";
-import http from "http";
 
 // TODO: Make code complete parallel
+// TODO: Current directory "controllers" may now follow MVC architecture, but for now it's just a place to delegate my code
 
 import { PACKAGE_JSON_PATH, NODE_MODULES_PATH, PORT } from "./constants/index.js";
 import { DependenciesType, ReadmeType } from "./types/index.js";
+import { createServer, startServer } from "./controllers/server.js";
 
 const getDependencies = async (): Promise<DependenciesType> => {
   const packageJsonData = await fs.readFile(PACKAGE_JSON_PATH, { encoding: "utf8" });
@@ -44,10 +45,5 @@ const main = async () => {
 
 main();
 
-const server = http.createServer(async (request, response) => {
-  response.statusCode = 200;
-  response.setHeader("Content-Type", "text/plain");
-  response.end("Server\n");
-});
-
-server.listen(PORT, () => console.log(`Server started on  http://localhost:${PORT}`));
+const server = createServer();
+startServer(server);
