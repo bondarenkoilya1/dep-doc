@@ -4,10 +4,12 @@ import http from "http";
 
 // TODO: Make code complete parallel
 
-import { PROJECT_ROOT, PACKAGE_JSON_PATH, NODE_MODULES_PATH, PORT } from "./constants/index.js";
+import { PACKAGE_JSON_PATH, NODE_MODULES_PATH, PORT } from "./constants/index.js";
+import { DependenciesType, ReadmeType } from "./types/index.js";
 
-const getDependencies = (data: string) => {
-  const { dependencies = {}, devDependencies = {} } = JSON.parse(data);
+const getDependencies = async (): Promise<DependenciesType> => {
+  const packageJsonData = await fs.readFile(PACKAGE_JSON_PATH, { encoding: "utf8" });
+  const { dependencies = {}, devDependencies = {} } = JSON.parse(packageJsonData);
 
   return {
     dependencies: Object.keys(dependencies),
@@ -15,17 +17,17 @@ const getDependencies = (data: string) => {
   };
 };
 
-const getReadmes = async (dependencies: string[], devDependencies: string[]) => {
+const getReadmes = async () => {
+  const { dependencies, devDependencies } = await getDependencies();
   const allDependencies = new Set([...dependencies, ...devDependencies]);
   const directories = await fs.readdir(NODE_MODULES_PATH, { encoding: "utf8" });
   const matchedDirectories = directories.filter((directory) => allDependencies.has(directory));
-  const readmes = [];
+  const readmes: ReadmeType[] = [];
 
   for (const directory of matchedDirectories) {
-    const directoryPath = path.join(PROJECT_ROOT, "node_modules", directory);
-    const readmePath = path.join(directoryPath, "README.md");
+    const readmePath = path.join(NODE_MODULES_PATH, directory, "README.md");
     const readmeContent = await fs.readFile(readmePath, { encoding: "utf8" });
-    readmes.push({ directory, readmeContent });
+    readmes.push({ directory, content: readmeContent });
   }
 
   return readmes;
@@ -33,10 +35,7 @@ const getReadmes = async (dependencies: string[], devDependencies: string[]) => 
 
 const main = async () => {
   try {
-    const packageJsonData = await fs.readFile(PACKAGE_JSON_PATH, { encoding: "utf8" });
-    const { dependencies, devDependencies } = getDependencies(packageJsonData);
-    const readmes = await getReadmes(dependencies, devDependencies);
-
+    const readmes = await getReadmes();
     if (!readmes.length) console.log("There is no available documentation.");
   } catch (error) {
     console.error(error);
