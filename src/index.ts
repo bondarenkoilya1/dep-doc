@@ -4,9 +4,7 @@ import http from "http";
 
 // TODO: Make code complete parallel
 
-const projectRoot = path.resolve(process.cwd());
-const packageJsonFilePath = path.join(projectRoot, "package.json");
-const nodeModulesDirectoryPath = path.join(projectRoot, "node_modules");
+import { PROJECT_ROOT, PACKAGE_JSON_PATH, NODE_MODULES_PATH, PORT } from "./constants/index.js";
 
 const getDependencies = (data: string) => {
   const { dependencies = {}, devDependencies = {} } = JSON.parse(data);
@@ -19,12 +17,12 @@ const getDependencies = (data: string) => {
 
 const getReadmes = async (dependencies: string[], devDependencies: string[]) => {
   const allDependencies = new Set([...dependencies, ...devDependencies]);
-  const directories = await fs.readdir(nodeModulesDirectoryPath, { encoding: "utf8" });
+  const directories = await fs.readdir(NODE_MODULES_PATH, { encoding: "utf8" });
   const matchedDirectories = directories.filter((directory) => allDependencies.has(directory));
   const readmes = [];
 
   for (const directory of matchedDirectories) {
-    const directoryPath = path.join(projectRoot, "node_modules", directory);
+    const directoryPath = path.join(PROJECT_ROOT, "node_modules", directory);
     const readmePath = path.join(directoryPath, "README.md");
     const readmeContent = await fs.readFile(readmePath, { encoding: "utf8" });
     readmes.push({ directory, readmeContent });
@@ -35,7 +33,7 @@ const getReadmes = async (dependencies: string[], devDependencies: string[]) => 
 
 const main = async () => {
   try {
-    const packageJsonData = await fs.readFile(packageJsonFilePath, { encoding: "utf8" });
+    const packageJsonData = await fs.readFile(PACKAGE_JSON_PATH, { encoding: "utf8" });
     const { dependencies, devDependencies } = getDependencies(packageJsonData);
     const readmes = await getReadmes(dependencies, devDependencies);
 
@@ -53,7 +51,4 @@ const server = http.createServer(async (request, response) => {
   response.end("Server\n");
 });
 
-const PORT = 5123;
-server.listen(PORT, () => {
-  console.log(`Server started on  http://localhost:${PORT}`);
-});
+server.listen(PORT, () => console.log(`Server started on  http://localhost:${PORT}`));
