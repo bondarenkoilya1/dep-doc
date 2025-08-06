@@ -11,11 +11,11 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
     const { allDependencies } = await getReadmes();
 
     const dependencyList = [...allDependencies].map(createLiElement).join("");
+    const content = "HTML page for the server";
 
-    const data = { dependencyList: dependencyList, content: "HTML page for the server" };
     const modifiedHtml = htmlFile
-      .replace("{{content}}", data.content)
-      .replace("{{dependencyList}}", data.dependencyList);
+      .replace("{{content}}", content)
+      .replace("{{dependencyList}}", dependencyList);
 
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(modifiedHtml);
@@ -30,7 +30,7 @@ export const createServer = (): http.Server => http.createServer(handleRequest);
 export const startServer = (server: http.Server): http.Server =>
   server.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
 
-function createLiElement(text: string) {
+function createLiElement(text: string): string {
   return `<li class="navbar__list-item">
     <a class="navbar__list-link">${text}</a>
   </li>`;
