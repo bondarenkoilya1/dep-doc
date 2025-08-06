@@ -6,7 +6,7 @@ import { getReadmes } from "./models/readme.js";
 
 const main = async () => {
   try {
-    const readmes = await getReadmes();
+    const { readmes } = await getReadmes();
     if (!readmes.length) console.log("There is no available documentation.");
   } catch (error) {
     console.error(error);

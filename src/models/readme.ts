@@ -26,5 +26,5 @@ export const getReadmes = async () => {
     readmes.push({ directory, content: readmeContent });
   }
 
-  return readmes;
+  return { readmes, allDependencies };
 };
