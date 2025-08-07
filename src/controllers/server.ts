@@ -3,25 +3,26 @@ import { PORT, SRC_PATH } from "../constants/index.js";
 import path from "path";
 import { promises as fs } from "fs";
 import { getReadmes } from "../models/readme.js";
+import { marked } from "marked";
 
 const handleRequest = async (request: http.IncomingMessage, response: http.ServerResponse) => {
   try {
     const htmlPath = path.join(SRC_PATH, "index.html");
     const htmlFile = await fs.readFile(htmlPath, { encoding: "utf8" });
-    const { allDependencies } = await getReadmes();
+    const { readmes, allDependencies } = await getReadmes();
 
     const dependencyList = [...allDependencies].map(createLiElement).join("");
-    const content = "HTML page for the server";
+    const content = marked.parse(readmes[0].content); // todo: maybe vulnerable to xss attacks
 
     const modifiedHtml = htmlFile
-      .replace("{{content}}", content)
+      .replace("{{content}}", content as string)
       .replace("{{dependencyList}}", dependencyList);
 
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(modifiedHtml);
   } catch (error) {
     response.writeHead(500);
-    response.end("Internal Server Error");
+    response.end(`${error}`);
   }
 };
 
