@@ -15,7 +15,8 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
 
     const dependencyList = transferListToHtml(dependencies);
     const devDependencyList = transferListToHtml(devDependencies);
-    const content = marked.parse(readmes[0].content); // todo: maybe vulnerable to xss attacks
+    const content =
+      readmes.length > 0 ? marked.parse(readmes[0].content) : "There is no available READMEs";
 
     const modifiedHtml = htmlFile
       .replace("{{content}}", content as string)
