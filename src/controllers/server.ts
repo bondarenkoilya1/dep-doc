@@ -11,8 +11,10 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
     const htmlFile = await fs.readFile(htmlPath, { encoding: "utf8" });
     const { readmes, dependencies, devDependencies } = await getReadmes();
 
-    const dependencyList = [...dependencies].map(createLiElement).join("");
-    const devDependencyList = [...devDependencies].map(createLiElement).join("");
+    const transferListToHtml = (list: string[]) => [...list].map(createLiElement).join("");
+
+    const dependencyList = transferListToHtml(dependencies);
+    const devDependencyList = transferListToHtml(devDependencies);
     const content = marked.parse(readmes[0].content); // todo: maybe vulnerable to xss attacks
 
     const modifiedHtml = htmlFile
