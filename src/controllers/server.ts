@@ -9,14 +9,16 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
   try {
     const htmlPath = path.join(SRC_PATH, "index.html");
     const htmlFile = await fs.readFile(htmlPath, { encoding: "utf8" });
-    const { readmes, allDependencies } = await getReadmes();
+    const { readmes, dependencies, devDependencies } = await getReadmes();
 
-    const dependencyList = [...allDependencies].map(createLiElement).join("");
+    const dependencyList = [...dependencies].map(createLiElement).join("");
+    const devDependencyList = [...devDependencies].map(createLiElement).join("");
     const content = marked.parse(readmes[0].content); // todo: maybe vulnerable to xss attacks
 
     const modifiedHtml = htmlFile
       .replace("{{content}}", content as string)
-      .replace("{{dependencyList}}", dependencyList);
+      .replace("{{dependencyList}}", dependencyList)
+      .replace("{{devDependencyList}}", devDependencyList);
 
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(modifiedHtml);
@@ -32,7 +34,9 @@ export const startServer = (server: http.Server): http.Server =>
   server.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
 
 function createLiElement(text: string): string {
+  const url = text.split("/").join("-");
+
   return `<li class="navbar__list-item">
-    <a class="navbar__list-link">${text}</a>
+    <a class="navbar__list-link" href=${url}>${text}</a>
   </li>`;
 }
