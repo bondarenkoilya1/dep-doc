@@ -4,6 +4,7 @@ import path from "path";
 import { promises as fs } from "fs";
 import { getReadmes } from "../models/readme.js";
 import { marked } from "marked";
+import { transferListToHtml } from "../utils/handleDependencies.js";
 
 const handleRequest = async (request: http.IncomingMessage, response: http.ServerResponse) => {
   try {
@@ -18,6 +19,7 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
       (dependency) => dependency.directory === request.url.slice(1)
     );
 
+    // TODO: Fix the bug with URLs that has been changed (from / to -, etc)
     const content =
       currentContent && currentContent.content
         ? marked.parse(currentContent.content)
@@ -40,17 +42,3 @@ export const createServer = (): http.Server => http.createServer(handleRequest);
 
 export const startServer = (server: http.Server): http.Server =>
   server.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
-
-// TODO: Bring those two to a separate file and return already modified deps
-function createLiElement(text: string): string {
-  // TODO: Fix the bug with URLs that has been changed (from / to -, etc)
-  const url = text.split("/").join("-");
-
-  return `<li class="navbar__list-item">
-    <a class="navbar__list-link" href=${url}>${text}</a>
-  </li>`;
-}
-
-function transferListToHtml(list: string[]) {
-  return [...list].map(createLiElement).join("");
-}
