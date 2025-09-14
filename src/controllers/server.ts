@@ -2,7 +2,7 @@ import http from "http";
 import { HTTP_STATUS, PORT, SRC_PATH } from "../constants/index.js";
 import path from "path";
 import { promises as fs } from "fs";
-import { getReadmes } from "../models/readme.js";
+import { getDependencies, getReadmes } from "../models/readme.js";
 import { marked } from "marked";
 import { transferListToHtml } from "../utils/handleDependencies.js";
 import { sendResponse } from "../utils/sendResponse.js";
@@ -11,12 +11,13 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
   try {
     const htmlPath = path.join(SRC_PATH, "index.html");
     const htmlFile = await fs.readFile(htmlPath, { encoding: "utf8" });
-    const { readmes, dependencies, devDependencies } = await getReadmes();
+    const { dependencies, devDependencies, otherDependencies } = await getDependencies();
+    const readmes = await getReadmes();
 
     const dependencyList = transferListToHtml(dependencies);
     const devDependencyList = transferListToHtml(devDependencies);
+    const otherDependencyList = transferListToHtml(otherDependencies);
 
-    // TODO: Fix the bug with URLs that has been changed (from / to -, etc)
     const selectedContent = readmes.find(
       (dependency) => dependency.directory === request.url.slice(1)
     );
@@ -25,7 +26,8 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
     const modifiedHtml = htmlFile
       .replace("{{content}}", marked.parse(renderedContent) as string)
       .replace("{{dependencyList}}", dependencyList)
-      .replace("{{devDependencyList}}", devDependencyList);
+      .replace("{{devDependencyList}}", devDependencyList)
+      .replace("{{otherDependenciesList}}", otherDependencyList);
 
     sendResponse(HTTP_STATUS.OK, response, modifiedHtml);
   } catch (error) {
