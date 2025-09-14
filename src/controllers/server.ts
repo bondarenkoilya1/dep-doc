@@ -5,7 +5,7 @@ import { promises as fs } from "fs";
 import { getReadmes } from "../models/readme.js";
 import { marked } from "marked";
 import { transferListToHtml } from "../utils/handleDependencies.js";
-import { CONTENT_TYPE_HTML } from "../constants/index.js";
+import { sendResponse } from "../utils/sendResponse.js";
 
 const handleRequest = async (request: http.IncomingMessage, response: http.ServerResponse) => {
   try {
@@ -27,11 +27,9 @@ const handleRequest = async (request: http.IncomingMessage, response: http.Serve
       .replace("{{dependencyList}}", dependencyList)
       .replace("{{devDependencyList}}", devDependencyList);
 
-    response.writeHead(HTTP_STATUS.OK, { "Content-Type": CONTENT_TYPE_HTML });
-    response.end(modifiedHtml);
+    sendResponse(HTTP_STATUS.OK, response, modifiedHtml);
   } catch (error) {
-    response.writeHead(HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    response.end(`${error}`);
+    sendResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, response, error);
   }
 };
 
